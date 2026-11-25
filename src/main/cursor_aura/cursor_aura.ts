@@ -1,8 +1,8 @@
 import { BrowserWindow, screen } from 'electron'
 import { mouseHub } from '../input/mouse_hub'
 
-const SIZE = 64
-const TIP = { x: 16, y: 16 }
+const SIZE = 96
+const CENTER_FROM_HOTSPOT = { x: 5, y: 8 }
 const FRAME_MS = 8
 
 export class CursorAura {
@@ -82,8 +82,8 @@ export class CursorAura {
 
   private placeAt(point: { x: number; y: number }): void {
     if (!this.window || this.window.isDestroyed()) return
-    const x = Math.round(point.x - TIP.x)
-    const y = Math.round(point.y - TIP.y)
+    const x = Math.round(point.x + CENTER_FROM_HOTSPOT.x - SIZE / 2)
+    const y = Math.round(point.y + CENTER_FROM_HOTSPOT.y - SIZE / 2)
     this.window.setBounds({ x, y, width: SIZE, height: SIZE })
   }
 }

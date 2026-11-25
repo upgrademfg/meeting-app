@@ -1,11 +1,11 @@
 import './aura.css'
 
-const pulse = document.querySelector<SVGGElement>('.pulse')!
+const pulse = document.querySelector<HTMLDivElement>('.pulse')!
 
 pulse.addEventListener('animationend', () => pulse.classList.remove('clicked'))
 
 window.api.onCursorClick(() => {
   pulse.classList.remove('clicked')
-  void pulse.getBoundingClientRect()
+  void pulse.offsetWidth
   pulse.classList.add('clicked')
 })

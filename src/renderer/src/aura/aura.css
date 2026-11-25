@@ -10,63 +10,63 @@ body {
 .aura {
   position: fixed;
   inset: 0;
-  overflow: visible;
-}
-
-.glow,
-.outline {
-  fill: none;
-  stroke: url(#aura-gradient);
-  stroke-linejoin: round;
-  stroke-linecap: round;
+  display: grid;
+  place-items: center;
 }
 
 .glow {
-  stroke-width: 7;
-  filter: blur(3px);
-  animation: breathe 2.8s ease-in-out infinite;
-}
-
-.outline {
-  stroke-width: 3.2;
-}
-
-.pulse {
-  transform-origin: 0 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #8b5cf6, #38bdf8, #f472b6, #8b5cf6);
+  -webkit-mask: radial-gradient(circle, rgba(0, 0, 0, 0.55) 0%, #000 40%, transparent 72%);
+  mask: radial-gradient(circle, rgba(0, 0, 0, 0.55) 0%, #000 40%, transparent 72%);
+  filter: blur(7px);
+  animation:
+    spin 3s linear infinite,
+    breathe 2.8s ease-in-out infinite;
 }
 
 .pulse.clicked {
-  animation: flash 0.45s ease-out;
+  animation: flash 0.5s ease-out;
+}
+
+@keyframes spin {
+  to {
+    rotate: 360deg;
+  }
 }
 
 @keyframes breathe {
   0%,
   100% {
-    opacity: 0.45;
+    opacity: 0.55;
+    scale: 0.9;
   }
   50% {
     opacity: 0.95;
+    scale: 1.08;
   }
 }
 
 @keyframes flash {
   0% {
-    transform: scale(1);
+    scale: 1;
     filter: brightness(1);
   }
-  35% {
-    transform: scale(1.18);
-    filter: brightness(1.8) drop-shadow(0 0 4px #38bdf8);
+  30% {
+    scale: 1.45;
+    filter: brightness(1.7);
   }
   100% {
-    transform: scale(1);
+    scale: 1;
     filter: brightness(1);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .glow {
-    animation: none;
-    opacity: 0.7;
+    animation: spin 12s linear infinite;
+    opacity: 0.75;
   }
 }
