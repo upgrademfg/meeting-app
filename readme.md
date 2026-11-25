@@ -26,7 +26,7 @@ npm run dist:win   # Windows 패키징 (nsis) — Windows에서 실행
 <저장 폴더>/2026-11-24_14-30-00.events.jsonl   # 이벤트 로그
 ```
 
-이벤트의 `t`는 녹화 시작 기준 ms이고, `x`/`y`는 영상의 픽셀 좌표입니다. 첫 줄은 `meta` 이벤트입니다.
+모든 이벤트에 `timestamp`(발생 시각, ISO 8601 UTC)와 `offsetMs`(녹화 시작 기준 ms, 영상 재생 위치와 같음)가 들어갑니다. `x`/`y`는 영상의 픽셀 좌표이고, 첫 줄은 `meta` 이벤트입니다.
 
 | type | 필드 |
 |---|---|

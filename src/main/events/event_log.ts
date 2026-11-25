@@ -13,19 +13,24 @@ export type RecEvent =
 
 export class EventLog {
   private readonly out: WriteStream
+  private readonly startedAt = Date.now()
   private readonly t0 = performance.now()
 
   constructor(path: string, meta: Record<string, unknown>) {
     this.out = createWriteStream(path, { flags: 'w' })
-    this.write({ t: 0, type: 'meta', version: 1, ...meta })
+    this.write({ ...this.stamp(0), type: 'meta', version: 1, ...meta })
   }
 
   log(event: RecEvent): void {
-    this.write({ t: Math.round(performance.now() - this.t0), ...event })
+    this.write({ ...this.stamp(Math.round(performance.now() - this.t0)), ...event })
   }
 
   close(): Promise<void> {
     return new Promise((resolve) => this.out.end(resolve))
+  }
+
+  private stamp(offsetMs: number): { timestamp: string; offsetMs: number } {
+    return { timestamp: new Date(this.startedAt + offsetMs).toISOString(), offsetMs }
   }
 
   private write(line: Record<string, unknown>): void {

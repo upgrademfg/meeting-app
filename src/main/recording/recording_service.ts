@@ -156,7 +156,6 @@ export class RecordingService {
     writeFileSync(pendingFile(), JSON.stringify(active.pending))
 
     const events = new EventLog(paths.events, {
-      startedAt: new Date().toISOString(),
       video: basename(paths.mp4),
       platform: process.platform,
       width: layout.width,
