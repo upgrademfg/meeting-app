@@ -1,35 +1,25 @@
-import { app } from 'electron'
-import { join } from 'node:path'
 import type { WindowChange, WindowChangeKind, WindowInfo } from '../domain/window_info'
 import type { WindowSource } from '../ports/window_source'
+import { loadNativeAddon } from './native_addon'
 
-interface NativeWindowEvents {
+interface WindowEventsAddon {
   start(listener: (event: { kind: WindowChangeKind; window: WindowInfo }) => void): boolean
   stop(): void
   activeWindow(): WindowInfo | null
 }
 
-let addon: NativeWindowEvents | undefined
-
-function loadAddon(): NativeWindowEvents {
-  if (addon) return addon
-  const path = join(app.getAppPath(), 'native', 'window_events', 'build', 'Release', 'window_events.node')
-  const module = { exports: {} as NativeWindowEvents }
-  process.dlopen(module, path.replace('app.asar', 'app.asar.unpacked'))
-  addon = module.exports
-  return addon
-}
+const addon = (): WindowEventsAddon => loadNativeAddon<WindowEventsAddon>('window_events')
 
 export class NativeWindowSource implements WindowSource {
   start(listener: (change: WindowChange) => void): boolean {
-    return loadAddon().start(listener)
+    return addon().start(listener)
   }
 
   stop(): void {
-    loadAddon().stop()
+    addon().stop()
   }
 
   current(): WindowInfo | undefined {
-    return loadAddon().activeWindow() ?? undefined
+    return addon().activeWindow() ?? undefined
   }
 }

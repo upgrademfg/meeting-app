@@ -1,7 +1,7 @@
 import { fileURLToPath } from 'node:url'
 import type { WindowInfo } from '../domain/window_info'
 import type { WindowContext, WindowContextResolver } from '../ports/window_context_resolver'
-import { runScript } from './script_runner'
+import { loadNativeAddon } from './native_addon'
 
 const FINDER = 'com.apple.finder'
 const SAFARI = new Set(['com.apple.Safari', 'com.apple.SafariTechnologyPreview'])
@@ -35,14 +35,18 @@ return ""`
 export class MacWindowContextResolver implements WindowContextResolver {
   async resolve(window: WindowInfo): Promise<WindowContext> {
     const { bundleId, documentUrl } = window
-    if (bundleId === FINDER) return { folderPath: (await osascript(FINDER_FOLDER)) || undefined }
-    if (bundleId && SAFARI.has(bundleId)) return { url: (await osascript(browserUrl(bundleId, 'current tab'))) || undefined }
-    if (bundleId && CHROMIUM.has(bundleId)) return { url: (await osascript(browserUrl(bundleId, 'active tab'))) || undefined }
+    if (bundleId === FINDER) return { folderPath: (await appleScript(FINDER_FOLDER)) || undefined }
+    if (bundleId && SAFARI.has(bundleId)) return { url: (await appleScript(browserUrl(bundleId, 'current tab'))) || undefined }
+    if (bundleId && CHROMIUM.has(bundleId)) return { url: (await appleScript(browserUrl(bundleId, 'active tab'))) || undefined }
     if (documentUrl?.startsWith('file://')) return { filePath: fileURLToPath(documentUrl) }
     return {}
   }
 }
 
-function osascript(script: string): Promise<string> {
-  return runScript('osascript', ['-e', script])
+interface WindowContextAddon {
+  runAppleScript(source: string): Promise<string>
+}
+
+function appleScript(script: string): Promise<string> {
+  return loadNativeAddon<WindowContextAddon>('window_context').runAppleScript(script)
 }

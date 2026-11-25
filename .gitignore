@@ -3,4 +3,4 @@ out
 dist
 *.log
 .DS_Store
-native/window_events/build
+native/build

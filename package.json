@@ -7,7 +7,7 @@
   "private": true,
   "scripts": {
     "postinstall": "npm run build:native",
-    "build:native": "node-gyp rebuild --directory native/window_events",
+    "build:native": "node-gyp rebuild --directory native",
     "dev": "electron-vite dev",
     "build": "npm run typecheck && electron-vite build",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",

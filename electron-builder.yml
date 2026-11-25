@@ -7,11 +7,11 @@ files:
   - out/**
   - resources/**
   - package.json
-  - native/window_events/build/Release/window_events.node
+  - native/build/Release/*.node
 asarUnpack:
   - node_modules/ffmpeg-static/**
   - node_modules/uiohook-napi/**
-  - native/window_events/build/Release/window_events.node
+  - native/build/Release/*.node
 mac:
   category: public.app-category.productivity
   target: dmg

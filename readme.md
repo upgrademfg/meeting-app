@@ -45,11 +45,17 @@ npm run dist:win   # Windows 패키징 (nsis) — Windows에서 실행
 ## 구조
 
 ```
-native/window_events/            활성 창 이벤트 네이티브 애드온 (N-API)
-  src/window_watcher.h           OS 공통 인터페이스 (WindowWatcher, WindowInfo)
-  src/addon.cc                   JS 바인딩: start(listener), stop(), activeWindow()
-  src/mac/window_watcher_mac.mm  NSWorkspace 앱 활성화 + AXObserver 제목·이동·크기
-  src/win/window_watcher_win.cc  SetWinEventHook 포그라운드·제목·위치
+native/                          네이티브 애드온 (N-API, binding.gyp 하나에 두 타깃)
+  window_events/                 활성 창 이벤트
+    window_watcher.h             OS 공통 인터페이스 (WindowWatcher, WindowInfo)
+    addon.cc                     JS 바인딩: start(listener), stop(), activeWindow()
+    mac/window_watcher_mac.mm    NSWorkspace 앱 활성화 + AXObserver 제목·이동·크기
+    win/window_watcher_win.cc    SetWinEventHook 포그라운드·제목·위치
+  window_context/                창이 열고 있는 폴더·URL 조회 (워커 스레드에서 실행)
+    context_reader.h             OS별 조회 함수
+    addon.cc                     JS 바인딩: runAppleScript(source) (mac), explorerFolder(hwnd, title) (win)
+    mac/apple_script.mm          NSAppleScript를 프로세스 안에서 실행
+    win/explorer_folder.cc       IShellWindows COM으로 Explorer 창의 현재 폴더
 src/main/
   index.ts                       앱 생명주기, 트레이, 컨트롤 창, IPC
   state.ts                       UI로 브로드캐스트되는 앱 상태
@@ -62,7 +68,7 @@ src/main/
     domain/                      이벤트·창 정보 타입과 순수 규칙
     ports/                       application이 의존하는 인터페이스
     application/                 창·마우스 추적 로직 (플랫폼 무관)
-    infrastructure/              네이티브 애드온, uiohook, AppleScript/PowerShell, JSONL 기록 어댑터
+    infrastructure/              네이티브 애드온, uiohook, Windows 최근 항목, JSONL 기록 어댑터
 src/renderer/
   src/recorder/recorder.ts     숨김 창 녹화 엔진 (캡처, 합성, 오디오 믹스, MediaRecorder)
   src/app.tsx                  컨트롤 창 UI
@@ -79,7 +85,7 @@ src/renderer/
 - [ ] Finder 폴더 / 문서 앱(Preview, Pages, Office) 파일 경로 기록
 - [ ] Windows Explorer 폴더 / 최근 항목 기반 파일 열기 기록
 - [ ] 창 이동·크기 조절·최대화 시 `window_move` 한 번만 기록
-- [ ] Windows에서 네이티브 애드온 빌드
+- [ ] Windows에서 네이티브 애드온 빌드 (window_events, window_context)
 - [ ] 녹화 중 강제 종료 → 재실행 시 MP4 복구
 
 ## 알려진 제약
