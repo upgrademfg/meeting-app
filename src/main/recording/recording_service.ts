@@ -6,6 +6,7 @@ import { startActivityTracking, type ActivityTracking } from '../activity'
 import type { StateStore } from '../state'
 import { convertToMp4 } from './ffmpeg'
 import { buildCaptureLayout, videoBitrateFor } from './layout'
+import { writeRecordingDocument, type RecordingInfo } from './recording_document'
 
 const FPS = 30
 const START_TIMEOUT_MS = 15_000
@@ -15,11 +16,14 @@ interface Pending {
   webm: string
   mp4: string
   videoIsH264: boolean
+  eventLog: string
+  document: string
+  info: RecordingInfo
 }
 
 interface ActiveRecording {
   layout: CaptureLayout
-  paths: { webm: string; mp4: string; events: string }
+  paths: { webm: string; mp4: string; eventLog: string; document: string }
   writer: WriteStream
   pending?: Pending
   activity?: ActivityTracking
@@ -74,7 +78,12 @@ export class RecordingService {
 
       mkdirSync(outputDir, { recursive: true })
       const base = join(outputDir, timestampName())
-      const paths = { webm: `${base}.recording.webm`, mp4: `${base}.mp4`, events: `${base}.events.jsonl` }
+      const paths = {
+        webm: `${base}.recording.webm`,
+        mp4: `${base}.mp4`,
+        eventLog: `${base}.recording.jsonl`,
+        document: `${base}.json`
+      }
       this.active = { layout, paths, writer: createWriteStream(paths.webm) }
 
       const info = await this.waitForStart({
@@ -106,11 +115,12 @@ export class RecordingService {
       })
       this.stopWaiter = undefined
     }
+    const endedAt = new Date().toISOString()
 
     await new Promise<void>((resolve) => active.writer.end(resolve))
     await activityStopped
     this.active = undefined
-    if (active.pending) await this.finalize(active.pending)
+    if (active.pending) await this.finalize(active.pending, endedAt)
   }
 
   async recoverPending(): Promise<void> {
@@ -147,18 +157,19 @@ export class RecordingService {
     const active = this.active!
     const { layout, paths } = active
 
-    active.pending = { webm: paths.webm, mp4: paths.mp4, videoIsH264: /h264|avc1/i.test(info.mimeType) }
-    writeFileSync(pendingFile(), JSON.stringify(active.pending))
-
     const audioWarnings: string[] = []
     if (!info.hasSystemAudio) audioWarnings.push('시스템 사운드를 캡처하지 못했습니다. 상대방 목소리가 녹음되지 않습니다.')
     if (!info.hasMic) audioWarnings.push('마이크를 사용할 수 없습니다. 내 목소리가 녹음되지 않습니다.')
 
-    active.activity = startActivityTracking({
-      layout,
-      logPath: paths.events,
-      warnings: audioWarnings,
-      meta: {
+    active.activity = startActivityTracking({ layout, logPath: paths.eventLog, warnings: audioWarnings })
+
+    active.pending = {
+      webm: paths.webm,
+      mp4: paths.mp4,
+      videoIsH264: /h264|avc1/i.test(info.mimeType),
+      eventLog: paths.eventLog,
+      document: paths.document,
+      info: {
         video: basename(paths.mp4),
         platform: process.platform,
         width: layout.width,
@@ -166,14 +177,20 @@ export class RecordingService {
         screens: layout.screens.map(({ displayId, x, y, width, height }) => ({ displayId, x, y, width, height })),
         mimeType: info.mimeType,
         hasSystemAudio: info.hasSystemAudio,
-        hasMic: info.hasMic
+        hasMic: info.hasMic,
+        startedAt: active.activity.startedAt
       }
-    })
+    }
+    writeFileSync(pendingFile(), JSON.stringify(active.pending))
 
     this.store.set({ status: 'recording', startedAt: Date.now(), warnings: active.activity.warnings })
   }
 
-  private async finalize(pending: Pending): Promise<void> {
+  private async finalize(pending: Pending, endedAt?: string): Promise<void> {
+    if (existsSync(pending.eventLog)) {
+      writeRecordingDocument(pending.document, pending.info, pending.eventLog, endedAt)
+      rmSync(pending.eventLog)
+    }
     try {
       await convertToMp4(pending.webm, pending.mp4, pending.videoIsH264)
       rmSync(pending.webm, { force: true })
@@ -197,5 +214,6 @@ export class RecordingService {
     await active.activity?.stop()
     await new Promise<void>((resolve) => active.writer.end(resolve))
     rmSync(active.paths.webm, { force: true })
+    rmSync(active.paths.eventLog, { force: true })
   }
 }

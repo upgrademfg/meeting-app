@@ -14,11 +14,11 @@ import type { WindowContextResolver } from './ports/window_context_resolver'
 export interface ActivityTrackingOptions {
   layout: CaptureLayout
   logPath: string
-  meta: Record<string, unknown>
   warnings: string[]
 }
 
 export interface ActivityTracking {
+  startedAt: string
   warnings: string[]
   stop(): Promise<void>
 }
@@ -30,7 +30,7 @@ function contextResolver(): WindowContextResolver {
 }
 
 export function startActivityTracking(options: ActivityTrackingOptions): ActivityTracking {
-  const log = new JsonlActivityLog(options.logPath, options.meta)
+  const log = new JsonlActivityLog(options.logPath)
   const projection = new ElectronVideoProjection(options.layout)
   const warnings = [...options.warnings]
   const trusted = process.platform !== 'darwin' || systemPreferences.isTrustedAccessibilityClient(false)
@@ -51,6 +51,7 @@ export function startActivityTracking(options: ActivityTrackingOptions): Activit
   for (const message of warnings) log.record({ type: 'warning', message })
 
   return {
+    startedAt: log.startedAt,
     warnings,
     async stop() {
       mouse?.stop()

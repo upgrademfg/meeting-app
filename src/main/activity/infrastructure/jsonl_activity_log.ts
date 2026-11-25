@@ -5,24 +5,24 @@ import type { ActivitySink } from '../ports/activity_sink'
 
 export class JsonlActivityLog implements ActivitySink {
   private readonly out: WriteStream
-  private readonly startedAt = Date.now()
+  private readonly startedAtMs = Date.now()
   private readonly t0 = performance.now()
 
-  constructor(path: string, meta: Record<string, unknown>) {
+  constructor(path: string) {
     this.out = createWriteStream(path, { flags: 'w' })
-    this.write(0, { type: 'meta', version: 1, ...meta })
+  }
+
+  get startedAt(): string {
+    return new Date(this.startedAtMs).toISOString()
   }
 
   record(event: ActivityEvent, at = performance.now()): void {
-    this.write(Math.max(0, Math.round(at - this.t0)), event)
+    const offsetMs = Math.max(0, Math.round(at - this.t0))
+    const timestamp = new Date(this.startedAtMs + offsetMs).toISOString()
+    this.out.write(JSON.stringify({ timestamp, offsetMs, ...event }) + '\n')
   }
 
   close(): Promise<void> {
     return new Promise((resolve) => this.out.end(resolve))
-  }
-
-  private write(offsetMs: number, body: object): void {
-    const timestamp = new Date(this.startedAt + offsetMs).toISOString()
-    this.out.write(JSON.stringify({ timestamp, offsetMs, ...body }) + '\n')
   }
 }

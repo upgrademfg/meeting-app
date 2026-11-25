@@ -23,11 +23,33 @@ npm run dist:win   # Windows 패키징 (nsis) — Windows에서 실행
 ## 산출물
 
 ```
-<저장 폴더>/2026-11-24_14-30-00.mp4            # H.264 + AAC
-<저장 폴더>/2026-11-24_14-30-00.events.jsonl   # 이벤트 로그
+<저장 폴더>/2026-11-24_14-30-00.mp4    # H.264 + AAC
+<저장 폴더>/2026-11-24_14-30-00.json   # 녹화 정보 + 이벤트
 ```
 
-모든 이벤트에 `timestamp`(발생 시각, ISO 8601 UTC)와 `offsetMs`(녹화 시작 기준 ms, 영상 재생 위치와 같음)가 들어갑니다. `x`/`y`는 영상의 픽셀 좌표이고, 첫 줄은 `meta` 이벤트입니다.
+녹화 중에는 이벤트를 `.recording.jsonl`에 기록하고, 녹화가 끝나거나 크래시 후 복구될 때 `.json` 하나로 합친 뒤 지웁니다.
+
+```json
+{
+  "version": 2,
+  "video": "2026-11-24_14-30-00.mp4",
+  "platform": "darwin",
+  "width": 3840,
+  "height": 2160,
+  "screens": [{ "displayId": "2", "x": 0, "y": 0, "width": 3840, "height": 2160 }],
+  "mimeType": "video/x-matroska;codecs=avc1,opus",
+  "hasSystemAudio": true,
+  "hasMic": true,
+  "startedAt": "2026-11-24T05:30:01.120Z",
+  "endedAt": "2026-11-24T06:12:44.903Z",
+  "recovered": false,
+  "events": [
+    { "timestamp": "2026-11-24T05:30:01.480Z", "offsetMs": 360, "type": "mouse_move", "x": 1995, "y": 953 }
+  ]
+}
+```
+
+`startedAt`은 영상의 0초 시각입니다. 크래시 후 복구된 녹화는 `recovered`가 `true`이고 `endedAt`이 없습니다. `events`는 `offsetMs` 순서로 정렬되며, 모든 이벤트에 `timestamp`(발생 시각, ISO 8601 UTC)와 `offsetMs`(녹화 시작 기준 ms, 영상 재생 위치와 같음)가 들어갑니다. `x`/`y`는 영상의 픽셀 좌표입니다.
 
 | type | 필드 |
 |---|---|
@@ -81,9 +103,9 @@ src/renderer/
 
 ## 스파이크 체크리스트
 
-- [ ] macOS: 시스템 사운드(loopback)가 실제로 녹음되는가 (`meta.hasSystemAudio`)
+- [ ] macOS: 시스템 사운드(loopback)가 실제로 녹음되는가 (`.json`의 `hasSystemAudio`)
 - [ ] Windows: 시스템 사운드 녹음
-- [ ] MediaRecorder가 H.264를 선택하는가 (`meta.mimeType`), 1시간 녹화 시 CPU 사용률
+- [ ] MediaRecorder가 H.264를 선택하는가 (`.json`의 `mimeType`), 1시간 녹화 시 CPU 사용률
 - [ ] 모니터 2대 이상 합성 시 프레임 드랍/CPU
 - [ ] 스피커 사용 시 에코 정도
 - [ ] macOS 손쉬운 사용 권한 후 마우스 이벤트 기록
