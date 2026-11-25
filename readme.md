@@ -69,9 +69,8 @@ yarn build && open -n -a node_modules/electron/dist/Electron.app --args "$PWD"
 | `mouse_down` | button, clicks, x, y | `{"type":"mouse_down","button":"left","clicks":2,"x":1728,"y":1598}` |
 | `mouse_move` | x, y (최대 10Hz) | `{"type":"mouse_move","x":1995,"y":953}` |
 | `wheel` | direction, rotation, x, y | `{"type":"wheel","direction":"vertical","rotation":4,"x":1448,"y":1815}` |
-| `window_active` | app, title, window, 그리고 알 수 있을 때 url(mac 브라우저)·file(문서)·folder(Finder·Explorer) — 활성화된 창이 바뀜 (앱 전환, 탭 전환, 페이지·폴더 이동) | `{"type":"window_active","app":"Safari","title":"Example Domain","url":"https://example.com/","window":{"x":0,"y":0,"width":3840,"height":2160}}`<br>`{"type":"window_active","app":"미리보기","title":"report.pdf – 1페이지","file":"/Users/me/Documents/report.pdf","window":{"x":6,"y":51,"width":1374,"height":1910}}`<br>`{"type":"window_active","app":"Finder","title":"다운로드","folder":"/Users/me/Downloads/","window":{"x":1497,"y":681,"width":1380,"height":654}}` |
+| `window_active` | app, title, window, 그리고 알 수 있을 때 url(mac 브라우저)·file(문서, Windows는 창 제목에 이름이 있는 최근 항목 파일)·folder(Finder·Explorer) — 활성화된 창이 바뀜 (앱 전환, 탭 전환, 페이지·폴더 이동) | `{"type":"window_active","app":"Safari","title":"Example Domain","url":"https://example.com/","window":{"x":0,"y":0,"width":3840,"height":2160}}`<br>`{"type":"window_active","app":"미리보기","title":"report.pdf – 1페이지","file":"/Users/me/Documents/report.pdf","window":{"x":6,"y":51,"width":1374,"height":1910}}`<br>`{"type":"window_active","app":"Finder","title":"다운로드","folder":"/Users/me/Downloads/","window":{"x":1497,"y":681,"width":1380,"height":654}}` |
 | `window_move` | app, title, window — 창 이동·크기 조절이 끝난 최종 위치 | `{"type":"window_move","app":"Finder","title":"다운로드","window":{"x":450,"y":450,"width":1350,"height":900}}` |
-| `path_open` | path, kind(file·folder) — Windows 최근 항목에 파일·폴더가 추가됨 (창 정보 없음) | `{"type":"path_open","path":"C:\\Users\\me\\Documents\\report.docx","kind":"file"}` |
 | `warning` | message | `{"type":"warning","message":"마이크를 사용할 수 없습니다. 내 목소리가 녹음되지 않습니다."}` |
 
 ## 알려진 제약

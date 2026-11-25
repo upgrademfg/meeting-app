@@ -7,7 +7,7 @@ import { JsonlActivityLog } from './infrastructure/jsonl_activity_log'
 import { MacWindowContextResolver } from './infrastructure/mac_window_context_resolver'
 import { NativeWindowSource } from './infrastructure/native_window_source'
 import { UiohookMouseSource } from './infrastructure/uiohook_mouse_source'
-import { WinRecentItemsSource } from './infrastructure/win_recent_items_source'
+import { WinRecentFiles } from './infrastructure/win_recent_files'
 import { WinWindowContextResolver } from './infrastructure/win_window_context_resolver'
 import type { WindowContextResolver } from './ports/window_context_resolver'
 
@@ -23,9 +23,9 @@ export interface ActivityTracking {
   stop(): Promise<void>
 }
 
-function contextResolver(): WindowContextResolver {
+function contextResolver(recentFiles: WinRecentFiles | undefined): WindowContextResolver {
   if (process.platform === 'darwin') return new MacWindowContextResolver()
-  if (process.platform === 'win32') return new WinWindowContextResolver()
+  if (recentFiles) return new WinWindowContextResolver(recentFiles)
   return { resolve: async () => ({}) }
 }
 
@@ -36,13 +36,10 @@ export function startActivityTracking(options: ActivityTrackingOptions): Activit
   const trusted = process.platform !== 'darwin' || systemPreferences.isTrustedAccessibilityClient(false)
   if (!trusted) warnings.push('손쉬운 사용 권한이 없어 마우스 입력과 창 제목·위치·문서를 기록하지 않습니다.')
 
-  const windows = new WindowActivityTracker(
-    new NativeWindowSource(),
-    contextResolver(),
-    projection,
-    log,
-    process.platform === 'win32' ? new WinRecentItemsSource() : undefined
-  )
+  const recentFiles = process.platform === 'win32' ? new WinRecentFiles() : undefined
+  recentFiles?.start()
+
+  const windows = new WindowActivityTracker(new NativeWindowSource(), contextResolver(recentFiles), projection, log)
   if (!windows.start()) warnings.push('창 전환 이벤트를 받을 수 없습니다.')
 
   const mouse = trusted ? new MouseActivityTracker(new UiohookMouseSource(), projection, log) : undefined
@@ -56,6 +53,7 @@ export function startActivityTracking(options: ActivityTrackingOptions): Activit
     async stop() {
       mouse?.stop()
       await windows.stop()
+      recentFiles?.stop()
       await log.close()
     }
   }

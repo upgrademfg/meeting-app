@@ -2,7 +2,6 @@ import { performance } from 'node:perf_hooks'
 import type { VideoRect } from '../domain/activity_event'
 import { isSameApp, isSameBounds, type WindowChange, type WindowInfo } from '../domain/window_info'
 import type { ActivitySink } from '../ports/activity_sink'
-import type { OpenedPathSource } from '../ports/opened_path_source'
 import type { VideoProjection } from '../ports/video_projection'
 import type { WindowContextResolver } from '../ports/window_context_resolver'
 import type { WindowSource } from '../ports/window_source'
@@ -24,16 +23,11 @@ export class WindowActivityTracker {
     private readonly windows: WindowSource,
     private readonly resolver: WindowContextResolver,
     private readonly projection: VideoProjection,
-    private readonly sink: ActivitySink,
-    private readonly openedPaths?: OpenedPathSource
+    private readonly sink: ActivitySink
   ) {}
 
   start(): boolean {
     const started = this.windows.start((change) => this.onChange(change))
-    this.openedPaths?.start(({ path, isDirectory }) => {
-      const at = performance.now()
-      this.enqueue(() => this.sink.record({ type: 'path_open', path, kind: isDirectory ? 'folder' : 'file' }, at))
-    })
     const current = this.windows.current()
     if (current) this.onChange({ kind: 'activate', window: current })
     return started
@@ -41,7 +35,6 @@ export class WindowActivityTracker {
 
   async stop(): Promise<void> {
     this.windows.stop()
-    this.openedPaths?.stop()
     this.settleMove()
     await this.queue
   }

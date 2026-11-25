@@ -16,5 +16,4 @@ export type ActivityEvent =
   | ({ type: 'wheel'; direction: 'vertical' | 'horizontal'; rotation: number } & VideoPoint)
   | { type: 'window_active'; app: string; title: string; url?: string; file?: string; folder?: string; window?: VideoRect }
   | { type: 'window_move'; app: string; title: string; window: VideoRect }
-  | { type: 'path_open'; path: string; kind: 'file' | 'folder' }
   | { type: 'warning'; message: string }
