@@ -6,7 +6,7 @@
   "author": "dlee@upgrademfg.com",
   "private": true,
   "scripts": {
-    "postinstall": "yarn build:native",
+    "postinstall": "install-electron && yarn build:native",
     "build:native": "node-gyp rebuild --directory native",
     "dev": "electron-vite dev",
     "build": "yarn typecheck && electron-vite build",
