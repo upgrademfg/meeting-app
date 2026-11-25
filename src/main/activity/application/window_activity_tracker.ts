@@ -17,8 +17,6 @@ interface PendingMove {
 
 export class WindowActivityTracker {
   private last?: WindowInfo
-  private lastFolder?: string
-  private lastFile?: string
   private pendingMove?: PendingMove
   private queue: Promise<void> = Promise.resolve()
 
@@ -32,9 +30,10 @@ export class WindowActivityTracker {
 
   start(): boolean {
     const started = this.windows.start((change) => this.onChange(change))
-    this.openedPaths?.start(({ path, isDirectory }) =>
-      this.enqueue(() => this.recordPath(isDirectory ? 'folder' : 'file', path, performance.now()))
-    )
+    this.openedPaths?.start(({ path, isDirectory }) => {
+      const at = performance.now()
+      this.enqueue(() => this.sink.record({ type: 'path_open', path, kind: isDirectory ? 'folder' : 'file' }, at))
+    })
     const current = this.windows.current()
     if (current) this.onChange({ kind: 'activate', window: current })
     return started
@@ -62,22 +61,18 @@ export class WindowActivityTracker {
 
   private async recordWindow(window: WindowInfo, at: number): Promise<void> {
     const context = await this.resolver.resolve(window)
-    const rect = this.rectOf(window)
-    this.sink.record({ type: 'window_active', app: window.app, title: window.title, url: context.url, window: rect }, at)
-    if (context.folderPath) this.recordPath('folder', context.folderPath, at, window.app, rect)
-    if (context.filePath) this.recordPath('file', context.filePath, at, window.app, rect)
-  }
-
-  private recordPath(kind: 'folder' | 'file', path: string, at: number, app?: string, window?: VideoRect): void {
-    if (kind === 'folder') {
-      if (path === this.lastFolder) return
-      this.lastFolder = path
-      this.sink.record({ type: 'folder_active', path, app, window }, at)
-    } else {
-      if (path === this.lastFile) return
-      this.lastFile = path
-      this.sink.record({ type: 'file_active', path, app, window }, at)
-    }
+    this.sink.record(
+      {
+        type: 'window_active',
+        app: window.app,
+        title: window.title,
+        url: context.url,
+        file: context.filePath,
+        folder: context.folderPath,
+        window: this.rectOf(window)
+      },
+      at
+    )
   }
 
   private scheduleMove(window: WindowInfo): void {
