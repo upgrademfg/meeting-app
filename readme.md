@@ -69,7 +69,7 @@ yarn build && open -n -a node_modules/electron/dist/Electron.app --args "$PWD"
 | `mouse_down` | button, clicks, x, y | `{"type":"mouse_down","button":"left","clicks":2,"x":1728,"y":1598}` |
 | `mouse_move` | x, y (최대 10Hz) | `{"type":"mouse_move","x":1995,"y":953}` |
 | `wheel` | direction, rotation, x, y | `{"type":"wheel","direction":"vertical","rotation":4,"x":1448,"y":1815}` |
-| `app_switch` / `window_title` | app, title, url(mac 브라우저), window | `{"type":"app_switch","app":"Safari","title":"Example Domain","url":"https://example.com/","window":{"x":0,"y":0,"width":3840,"height":2160}}` |
+| `window_active` | app, title, url(mac 브라우저), window — 활성화된 창이 바뀜 (앱 전환, 탭 전환, 페이지·폴더 이동) | `{"type":"window_active","app":"Safari","title":"Example Domain","url":"https://example.com/","window":{"x":0,"y":0,"width":3840,"height":2160}}` |
 | `window_move` | app, title, window — 창 이동·크기 조절이 끝난 최종 위치 | `{"type":"window_move","app":"Finder","title":"다운로드","window":{"x":450,"y":450,"width":1350,"height":900}}` |
 | `folder_active` | path, app, window — 활성화된 폴더가 바뀜 | `{"type":"folder_active","path":"/Users/me/Downloads/","app":"Finder","window":{"x":1497,"y":681,"width":1380,"height":654}}` |
 | `file_active` | path, app, window — 활성화된 파일이 바뀜 | `{"type":"file_active","path":"/Users/me/Documents/report.pdf","app":"미리보기","window":{"x":6,"y":51,"width":1374,"height":1910}}` |

@@ -55,16 +55,15 @@ export class WindowActivityTracker {
     this.settleMove()
     const previous = this.last
     this.last = window
-    const appChanged = !isSameApp(previous, window)
-    if (!appChanged && previous?.title === window.title) return
+    if (isSameApp(previous, window) && previous?.title === window.title) return
     const at = performance.now()
-    this.enqueue(() => this.recordWindow(appChanged ? 'app_switch' : 'window_title', window, at))
+    this.enqueue(() => this.recordWindow(window, at))
   }
 
-  private async recordWindow(type: 'app_switch' | 'window_title', window: WindowInfo, at: number): Promise<void> {
+  private async recordWindow(window: WindowInfo, at: number): Promise<void> {
     const context = await this.resolver.resolve(window)
     const rect = this.rectOf(window)
-    this.sink.record({ type, app: window.app, title: window.title, url: context.url, window: rect }, at)
+    this.sink.record({ type: 'window_active', app: window.app, title: window.title, url: context.url, window: rect }, at)
     if (context.folderPath) this.recordPath('folder', context.folderPath, at, window.app, rect)
     if (context.filePath) this.recordPath('file', context.filePath, at, window.app, rect)
   }
