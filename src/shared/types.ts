@@ -49,6 +49,16 @@ export interface RecorderStartedInfo {
   hasMic: boolean
 }
 
+export type CursorStatusTone = 'recording' | 'info' | 'success' | 'warning' | 'error'
+
+export interface CursorStatusView {
+  tone: CursorStatusTone
+  text: string
+  startedAt?: number
+}
+
+export type CursorStatusAlign = 'left' | 'right'
+
 export type PermissionKind = 'screen' | 'microphone' | 'accessibility'
 
 export interface Api {
@@ -69,5 +79,5 @@ export interface Api {
   recorderStopped(): void
   recorderError(message: string): void
 
-  onCursorClick(cb: () => void): void
+  onCursorStatus(cb: (view: CursorStatusView, align: CursorStatusAlign) => void): void
 }

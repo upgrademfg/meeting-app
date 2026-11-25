@@ -1,7 +1,8 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, nativeImage, shell, systemPreferences, Tray } from 'electron'
 import { join } from 'node:path'
 import type { AppState, PermissionKind } from '../shared/types'
-import { CursorAura } from './cursor_aura/cursor_aura'
+import { CursorStatusPresenter } from './cursor_status/cursor_status_presenter'
+import { CursorStatusWindow } from './cursor_status/cursor_status_window'
 import { openPermissionSettings, requestPermissions } from './permissions'
 import { RecordingService } from './recording/recording_service'
 import { saveSettings } from './settings'
@@ -24,7 +25,7 @@ let quitting = false
 const preload = join(__dirname, '../preload/index.js')
 const resource = (name: string): string => join(app.getAppPath(), 'resources', name)
 
-function loadPage(win: BrowserWindow, page: 'index' | 'recorder' | 'aura'): void {
+function loadPage(win: BrowserWindow, page: 'index' | 'recorder' | 'cursor_status'): void {
   const devUrl = process.env['ELECTRON_RENDERER_URL']
   if (!app.isPackaged && devUrl) void win.loadURL(`${devUrl}/${page}.html`)
   else void win.loadFile(join(__dirname, `../renderer/${page}.html`))
@@ -65,13 +66,13 @@ function getRecorderWindow(): BrowserWindow {
 }
 
 const recording = new RecordingService(getRecorderWindow, store)
-const cursorAura = new CursorAura(preload, (win) => loadPage(win, 'aura'))
-
-function syncCursorAura(state: AppState): void {
-  const canFollowMouse = !isMac || systemPreferences.isTrustedAccessibilityClient(false)
-  if (state.status === 'recording' && canFollowMouse) cursorAura.show()
-  else cursorAura.hide()
-}
+const cursorStatus = new CursorStatusPresenter(
+  new CursorStatusWindow(
+    preload,
+    (win) => loadPage(win, 'cursor_status'),
+    () => !isMac || systemPreferences.isTrustedAccessibilityClient(false)
+  )
+)
 
 function formatElapsed(startedAt?: number): string {
   if (!startedAt) return ''
@@ -167,7 +168,7 @@ void app.whenReady().then(() => {
   registerIpc()
   tray = new Tray(nativeImage.createEmpty())
   store.on('change', broadcast)
-  store.on('change', syncCursorAura)
+  store.on('change', (state) => cursorStatus.update(state))
   setInterval(() => {
     if (store.get().status === 'recording') updateTray(store.get(), false)
   }, 1000)

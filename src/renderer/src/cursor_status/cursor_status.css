@@ -1,0 +1,109 @@
+:root {
+  --recording: #ff453a;
+  --info: #64d2ff;
+  --success: #30d158;
+  --warning: #ffd60a;
+  --error: #ff453a;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  font: 500 12px/1 -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  user-select: none;
+}
+
+body {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  box-sizing: border-box;
+}
+
+body.align-right {
+  justify-content: flex-end;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  height: 24px;
+  padding: 0 10px 0 8px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  background: rgba(24, 24, 28, 0.86);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+  color: #fff;
+}
+
+.badge[hidden] {
+  display: none;
+}
+
+.dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tone);
+  box-shadow: 0 0 6px var(--tone);
+}
+
+.text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.time {
+  flex: none;
+  color: rgba(255, 255, 255, 0.7);
+  font-variant-numeric: tabular-nums;
+}
+
+.time:empty {
+  display: none;
+}
+
+.badge[data-tone='recording'] {
+  --tone: var(--recording);
+}
+.badge[data-tone='info'] {
+  --tone: var(--info);
+}
+.badge[data-tone='success'] {
+  --tone: var(--success);
+}
+.badge[data-tone='warning'] {
+  --tone: var(--warning);
+}
+.badge[data-tone='error'] {
+  --tone: var(--error);
+}
+
+.badge[data-tone='recording'] .dot {
+  animation: blink 1.4s ease-in-out infinite;
+}
+
+.badge[data-tone='info'] .dot {
+  animation: blink 0.9s ease-in-out infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.3;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dot {
+    animation: none !important;
+  }
+}

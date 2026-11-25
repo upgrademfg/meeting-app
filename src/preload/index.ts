@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron'
-import type { Api, AppState, RecorderStartConfig } from '../shared/types'
+import type { Api, AppState, CursorStatusAlign, CursorStatusView, RecorderStartConfig } from '../shared/types'
 
 const api: Api = {
   getState: () => ipcRenderer.invoke('app:get-state'),
@@ -27,8 +27,8 @@ const api: Api = {
   recorderStopped: () => ipcRenderer.send('recorder:stopped'),
   recorderError: (message) => ipcRenderer.send('recorder:error', message),
 
-  onCursorClick: (cb) => {
-    ipcRenderer.on('cursor:click', () => cb())
+  onCursorStatus: (cb) => {
+    ipcRenderer.on('cursor-status:view', (_e, view: CursorStatusView, align: CursorStatusAlign) => cb(view, align))
   }
 }
 
