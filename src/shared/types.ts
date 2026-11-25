@@ -68,4 +68,6 @@ export interface Api {
   recorderChunk(data: Uint8Array): void
   recorderStopped(): void
   recorderError(message: string): void
+
+  onCursorClick(cb: () => void): void
 }

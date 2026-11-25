@@ -63,6 +63,8 @@ src/main/
   recording/recording_service    녹화 한 건의 생명주기 (시작 → 청크 저장 → MP4 변환, 크래시 복구)
   recording/layout.ts            모든 모니터를 한 캔버스로 배치
   recording/ffmpeg.ts            WebM → MP4
+  input/mouse_hub.ts             전역 마우스 hook(uiohook) 공용 구독 — 이벤트 기록과 커서 효과가 함께 사용
+  cursor_aura/cursor_aura.ts     녹화 중 커서를 따라다니는 AI 스타일 오버레이 (클릭 통과, 캡처 제외)
   activity/                      활동 이벤트 기록
     index.ts                     조립 (플랫폼별 어댑터 선택, startActivityTracking)
     domain/                      이벤트·창 정보 타입과 순수 규칙
@@ -72,6 +74,7 @@ src/main/
 src/renderer/
   src/recorder/recorder.ts     숨김 창 녹화 엔진 (캡처, 합성, 오디오 믹스, MediaRecorder)
   src/app.tsx                  컨트롤 창 UI
+  aura.html, src/aura/          커서 오버레이 화면 (회전 그라데이션 링, 빛, 클릭 파동)
 ```
 
 ## 스파이크 체크리스트
@@ -85,6 +88,7 @@ src/renderer/
 - [ ] Finder 폴더 / 문서 앱(Preview, Pages, Office) 파일 경로 기록
 - [ ] Windows Explorer 폴더 / 최근 항목 기반 파일 열기 기록
 - [ ] 창 이동·크기 조절·최대화 시 `window_move` 한 번만 기록
+- [ ] 커서 오버레이가 커서를 끊김 없이 따라가는지, 전체 화면 앱 위에도 뜨는지, 녹화 영상에는 안 찍히는지
 - [ ] Windows에서 네이티브 애드온 빌드 (window_events, window_context)
 - [ ] 녹화 중 강제 종료 → 재실행 시 MP4 복구
 

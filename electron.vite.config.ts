@@ -11,7 +11,8 @@ export default defineConfig({
       rollupOptions: {
         input: {
           index: resolve(__dirname, 'src/renderer/index.html'),
-          recorder: resolve(__dirname, 'src/renderer/recorder.html')
+          recorder: resolve(__dirname, 'src/renderer/recorder.html'),
+          aura: resolve(__dirname, 'src/renderer/aura.html')
         }
       }
     }

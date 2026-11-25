@@ -25,7 +25,11 @@ const api: Api = {
   recorderStarted: (info) => ipcRenderer.send('recorder:started', info),
   recorderChunk: (data) => ipcRenderer.send('recorder:chunk', data),
   recorderStopped: () => ipcRenderer.send('recorder:stopped'),
-  recorderError: (message) => ipcRenderer.send('recorder:error', message)
+  recorderError: (message) => ipcRenderer.send('recorder:error', message),
+
+  onCursorClick: (cb) => {
+    ipcRenderer.on('cursor:click', () => cb())
+  }
 }
 
 contextBridge.exposeInMainWorld('api', api)

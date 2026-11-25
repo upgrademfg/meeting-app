@@ -1,0 +1,123 @@
+:root {
+  --ring-size: 46px;
+  --ring-width: 3px;
+  --violet: #8b5cf6;
+  --blue: #38bdf8;
+  --pink: #f472b6;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+.aura {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.aura > * {
+  grid-area: 1 / 1;
+}
+
+.glow {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.45) 0%, rgba(56, 189, 248, 0.25) 45%, transparent 70%);
+  filter: blur(6px);
+  animation: breathe 2.8s ease-in-out infinite;
+}
+
+.ring {
+  width: var(--ring-size);
+  height: var(--ring-size);
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, var(--violet), var(--blue), var(--pink), var(--violet));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--ring-width)), #000 calc(100% - var(--ring-width) + 1px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - var(--ring-width)), #000 calc(100% - var(--ring-width) + 1px));
+  animation: spin 2.4s linear infinite;
+}
+
+.ring-blur {
+  filter: blur(5px);
+  opacity: 0.8;
+}
+
+.spark {
+  width: var(--ring-size);
+  height: var(--ring-size);
+  animation: spin 1.6s linear infinite reverse;
+}
+
+.spark::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  margin-left: -3px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px 2px var(--blue), 0 0 12px 4px var(--violet);
+}
+
+.spark {
+  position: relative;
+}
+
+.ripple {
+  width: var(--ring-size);
+  height: var(--ring-size);
+  border-radius: 50%;
+  border: 2px solid var(--blue);
+  box-shadow: 0 0 12px var(--violet), inset 0 0 12px var(--violet);
+  animation: ripple 0.6s ease-out forwards;
+  pointer-events: none;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(0.85);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+@keyframes ripple {
+  from {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  to {
+    transform: scale(2.3);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring,
+  .spark {
+    animation-duration: 8s;
+  }
+  .glow {
+    animation: none;
+  }
+}
