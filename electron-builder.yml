@@ -1,0 +1,27 @@
+appId: com.upgrademfg.meetingrecorder
+productName: Meeting Recorder
+directories:
+  buildResources: build
+  output: dist
+files:
+  - out/**
+  - resources/**
+  - package.json
+asarUnpack:
+  - node_modules/ffmpeg-static/**
+  - node_modules/uiohook-napi/**
+  - node_modules/get-windows/**
+mac:
+  category: public.app-category.productivity
+  target: dmg
+  hardenedRuntime: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  extendInfo:
+    NSMicrophoneUsageDescription: 회의 중 내 목소리를 녹음하기 위해 마이크가 필요합니다.
+    NSAppleEventsUsageDescription: Finder 폴더와 열린 문서 경로를 기록하기 위해 필요합니다.
+win:
+  target: nsis
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
