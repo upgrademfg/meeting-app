@@ -9,15 +9,16 @@
 ## 실행
 
 ```bash
-npm install
+npm install        # 네이티브 애드온(native/window_events)도 함께 빌드
 npm run dev        # 개발 모드
 npm run build      # 타입체크 + 빌드
 npm run dist:mac   # macOS 패키징 (dmg)
 npm run dist:win   # Windows 패키징 (nsis) — Windows에서 실행
 ```
 
-> npm 11은 설치 스크립트를 기본 차단합니다. 처음 설치할 때
-> `npm install-scripts approve ffmpeg-static get-windows uiohook-napi` 가 필요할 수 있습니다.
+> 네이티브 애드온 빌드에는 macOS는 Xcode Command Line Tools, Windows는 Visual Studio Build Tools(C++)와 Python이 필요합니다.
+> npm 11은 의존성의 설치 스크립트를 기본 차단하므로 처음 설치할 때
+> `npm install-scripts approve ffmpeg-static uiohook-napi` 가 필요할 수 있습니다.
 
 ## 산출물
 
@@ -34,6 +35,7 @@ npm run dist:win   # Windows 패키징 (nsis) — Windows에서 실행
 | `mouse_move` | x, y (최대 10Hz) |
 | `wheel` | direction, rotation, x, y |
 | `app_switch` / `window_title` | app, title, url(mac 브라우저), window |
+| `window_move` | app, title, window — 창 이동·크기 조절이 끝난 최종 위치 |
 | `folder_active` | path, app, window — 지금 활성화된 폴더가 바뀜 (폴더를 열거나 그 창으로 전환) |
 | `file_active` | path, app, window — 지금 활성화된 파일이 바뀜 (파일을 열거나 그 문서 창으로 전환) |
 | `warning` | message |
@@ -43,16 +45,24 @@ npm run dist:win   # Windows 패키징 (nsis) — Windows에서 실행
 ## 구조
 
 ```
+native/window_events/            활성 창 이벤트 네이티브 애드온 (N-API)
+  src/window_watcher.h           OS 공통 인터페이스 (WindowWatcher, WindowInfo)
+  src/addon.cc                   JS 바인딩: start(listener), stop(), activeWindow()
+  src/mac/window_watcher_mac.mm  NSWorkspace 앱 활성화 + AXObserver 제목·이동·크기
+  src/win/window_watcher_win.cc  SetWinEventHook 포그라운드·제목·위치
 src/main/
-  index.ts                     앱 생명주기, 트레이, 컨트롤 창, IPC
-  state.ts                     UI로 브로드캐스트되는 앱 상태
-  permissions.ts               macOS 권한 조회/요청
-  recording/recording_service  녹화 한 건의 생명주기 (시작 → 청크 저장 → MP4 변환, 크래시 복구)
-  recording/layout.ts          모든 모니터를 한 캔버스로 배치
-  recording/ffmpeg.ts          WebM → MP4
-  events/event_log.ts          .events.jsonl 기록
-  events/input_tracker.ts      전역 마우스 (uiohook-napi)
-  events/context_tracker.ts     활성 창, 파일/폴더 열기 (get-windows + OS별 조회)
+  index.ts                       앱 생명주기, 트레이, 컨트롤 창, IPC
+  state.ts                       UI로 브로드캐스트되는 앱 상태
+  permissions.ts                 macOS 권한 조회/요청
+  recording/recording_service    녹화 한 건의 생명주기 (시작 → 청크 저장 → MP4 변환, 크래시 복구)
+  recording/layout.ts            모든 모니터를 한 캔버스로 배치
+  recording/ffmpeg.ts            WebM → MP4
+  activity/                      활동 이벤트 기록
+    index.ts                     조립 (플랫폼별 어댑터 선택, startActivityTracking)
+    domain/                      이벤트·창 정보 타입과 순수 규칙
+    ports/                       application이 의존하는 인터페이스
+    application/                 창·마우스 추적 로직 (플랫폼 무관)
+    infrastructure/              네이티브 애드온, uiohook, AppleScript/PowerShell, JSONL 기록 어댑터
 src/renderer/
   src/recorder/recorder.ts     숨김 창 녹화 엔진 (캡처, 합성, 오디오 믹스, MediaRecorder)
   src/app.tsx                  컨트롤 창 UI
@@ -68,6 +78,8 @@ src/renderer/
 - [ ] macOS 손쉬운 사용 권한 후 마우스 이벤트 기록
 - [ ] Finder 폴더 / 문서 앱(Preview, Pages, Office) 파일 경로 기록
 - [ ] Windows Explorer 폴더 / 최근 항목 기반 파일 열기 기록
+- [ ] 창 이동·크기 조절·최대화 시 `window_move` 한 번만 기록
+- [ ] Windows에서 네이티브 애드온 빌드
 - [ ] 녹화 중 강제 종료 → 재실행 시 MP4 복구
 
 ## 알려진 제약

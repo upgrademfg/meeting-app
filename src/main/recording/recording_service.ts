@@ -1,10 +1,8 @@
-import { app, ipcMain, session, systemPreferences, type BrowserWindow } from 'electron'
+import { app, ipcMain, session, type BrowserWindow } from 'electron'
 import { createWriteStream, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync, type WriteStream } from 'node:fs'
 import { basename, join } from 'node:path'
 import type { CaptureLayout, RecorderStartConfig, RecorderStartedInfo } from '../../shared/types'
-import { ContextTracker } from '../events/context_tracker'
-import { EventLog } from '../events/event_log'
-import { InputTracker } from '../events/input_tracker'
+import { startActivityTracking, type ActivityTracking } from '../activity'
 import type { StateStore } from '../state'
 import { convertToMp4 } from './ffmpeg'
 import { buildCaptureLayout, videoBitrateFor } from './layout'
@@ -24,9 +22,7 @@ interface ActiveRecording {
   paths: { webm: string; mp4: string; events: string }
   writer: WriteStream
   pending?: Pending
-  events?: EventLog
-  input?: InputTracker
-  context?: ContextTracker
+  activity?: ActivityTracking
 }
 
 const pendingFile = (): string => join(app.getPath('userData'), 'pending-recording.json')
@@ -98,8 +94,7 @@ export class RecordingService {
     if (!active || this.store.get().status !== 'recording') return
     this.store.set({ status: 'finalizing' })
 
-    active.input?.stop()
-    active.context?.stop()
+    const activityStopped = active.activity?.stop()
     if (!recorderAlreadyStopped) {
       await new Promise<void>((resolve) => {
         const timer = setTimeout(resolve, STOP_TIMEOUT_MS)
@@ -113,7 +108,7 @@ export class RecordingService {
     }
 
     await new Promise<void>((resolve) => active.writer.end(resolve))
-    await active.events?.close()
+    await activityStopped
     this.active = undefined
     if (active.pending) await this.finalize(active.pending)
   }
@@ -155,36 +150,27 @@ export class RecordingService {
     active.pending = { webm: paths.webm, mp4: paths.mp4, videoIsH264: /h264|avc1/i.test(info.mimeType) }
     writeFileSync(pendingFile(), JSON.stringify(active.pending))
 
-    const events = new EventLog(paths.events, {
-      video: basename(paths.mp4),
-      platform: process.platform,
-      width: layout.width,
-      height: layout.height,
-      screens: layout.screens.map(({ displayId, x, y, width, height }) => ({ displayId, x, y, width, height })),
-      mimeType: info.mimeType,
-      hasSystemAudio: info.hasSystemAudio,
-      hasMic: info.hasMic
+    const audioWarnings: string[] = []
+    if (!info.hasSystemAudio) audioWarnings.push('시스템 사운드를 캡처하지 못했습니다. 상대방 목소리가 녹음되지 않습니다.')
+    if (!info.hasMic) audioWarnings.push('마이크를 사용할 수 없습니다. 내 목소리가 녹음되지 않습니다.')
+
+    active.activity = startActivityTracking({
+      layout,
+      logPath: paths.events,
+      warnings: audioWarnings,
+      meta: {
+        video: basename(paths.mp4),
+        platform: process.platform,
+        width: layout.width,
+        height: layout.height,
+        screens: layout.screens.map(({ displayId, x, y, width, height }) => ({ displayId, x, y, width, height })),
+        mimeType: info.mimeType,
+        hasSystemAudio: info.hasSystemAudio,
+        hasMic: info.hasMic
+      }
     })
-    active.events = events
 
-    const warnings: string[] = []
-    if (!info.hasSystemAudio) warnings.push('시스템 사운드를 캡처하지 못했습니다. 상대방 목소리가 녹음되지 않습니다.')
-    if (!info.hasMic) warnings.push('마이크를 사용할 수 없습니다. 내 목소리가 녹음되지 않습니다.')
-
-    const log = (e: Parameters<EventLog['log']>[0]): void => events.log(e)
-    active.context = new ContextTracker(layout, log)
-    active.context.start()
-
-    const canHookInput = process.platform !== 'darwin' || systemPreferences.isTrustedAccessibilityClient(false)
-    if (canHookInput) {
-      active.input = new InputTracker(layout, log, () => active.context?.nudge())
-      active.input.start()
-    } else {
-      warnings.push('손쉬운 사용 권한이 없어 마우스 입력을 기록하지 않습니다.')
-    }
-    for (const w of warnings) events.log({ type: 'warning', message: w })
-
-    this.store.set({ status: 'recording', startedAt: Date.now(), warnings })
+    this.store.set({ status: 'recording', startedAt: Date.now(), warnings: active.activity.warnings })
   }
 
   private async finalize(pending: Pending): Promise<void> {
@@ -208,10 +194,8 @@ export class RecordingService {
     this.active = undefined
     if (!active) return
     this.recorderWindow().webContents.send('recorder:stop')
-    active.input?.stop()
-    active.context?.stop()
+    await active.activity?.stop()
     await new Promise<void>((resolve) => active.writer.end(resolve))
-    await active.events?.close()
     rmSync(active.paths.webm, { force: true })
   }
 }
