@@ -9,16 +9,17 @@
 ## 실행
 
 ```bash
-npm install        # 네이티브 애드온(native/window_events)도 함께 빌드
-npm run dev        # 개발 모드
-npm run build      # 타입체크 + 빌드
-npm run dist:mac   # macOS 패키징 (dmg)
-npm run dist:win   # Windows 패키징 (nsis) — Windows에서 실행
+yarn install       # 네이티브 애드온(native/window_events, window_context)도 함께 빌드
+yarn dev           # 개발 모드
+yarn build         # 타입체크 + 빌드
+yarn dist:mac      # macOS 패키징 (dmg)
+yarn dist:win      # Windows 패키징 (nsis) — Windows에서 실행
 ```
 
+> 패키지 매니저는 Yarn 4(berry)입니다. Yarn 실행 파일은 `.yarn/releases`에 들어 있어 전역 `yarn`이 어떤 버전이든 이 버전으로 실행됩니다.
+> `node_modules` 방식(`nodeLinker: node-modules`)으로 설치합니다. Electron 패키징과 네이티브 애드온이 실제 `node_modules`를 필요로 하기 때문입니다.
+> Yarn은 의존성의 설치 스크립트를 기본 차단하므로, 필요한 패키지만 `package.json`의 `dependenciesMeta`에서 허용합니다(ffmpeg-static, uiohook-napi, fsevents).
 > 네이티브 애드온 빌드에는 macOS는 Xcode Command Line Tools, Windows는 Visual Studio Build Tools(C++)와 Python이 필요합니다.
-> npm 11은 의존성의 설치 스크립트를 기본 차단하므로 처음 설치할 때
-> `npm install-scripts approve ffmpeg-static uiohook-napi` 가 필요할 수 있습니다.
 
 ## 산출물
 
