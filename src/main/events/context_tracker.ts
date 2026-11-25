@@ -2,8 +2,10 @@ import { app, shell } from 'electron'
 import { statSync, watch, type FSWatcher } from 'node:fs'
 import { join } from 'node:path'
 import { activeWindow } from 'get-windows'
+import type { CaptureLayout } from '../../shared/types'
 import type { RecEvent } from './event_log'
 import { macFinderFolder, macFrontDocument, winExplorerFolder } from './platform'
+import { rectToVideo, type VideoRect } from './video_coords'
 
 const POLL_MS = 1000
 const CLICK_DELAY_MS = 300
@@ -19,7 +21,10 @@ export class ContextTracker {
   private recentWatcher?: FSWatcher
   private recentSeen = new Map<string, number>()
 
-  constructor(private readonly emit: (event: RecEvent) => void) {}
+  constructor(
+    private readonly layout: CaptureLayout,
+    private readonly emit: (event: RecEvent) => void
+  ) {}
 
   start(): void {
     this.timer = setInterval(() => void this.poll(), POLL_MS)
@@ -64,26 +69,27 @@ export class ContextTracker {
     if (!appChanged && title === this.lastTitle) return
     this.lastApp = appName
     this.lastTitle = title
-    this.emit({ type: appChanged ? 'app_switch' : 'window_title', app: appName, title, url })
+    const window = rectToVideo(this.layout, win.bounds)
+    this.emit({ type: appChanged ? 'app_switch' : 'window_title', app: appName, title, url, window })
 
     if (win.platform === 'macos') {
-      if (win.owner.bundleId === 'com.apple.finder') this.report('folder', await macFinderFolder(), appName)
-      else this.report('file', await macFrontDocument(), appName)
+      if (win.owner.bundleId === 'com.apple.finder') this.report('folder', await macFinderFolder(), appName, window)
+      else this.report('file', await macFrontDocument(), appName, window)
     } else if (win.platform === 'windows' && /\\explorer\.exe$/i.test(win.owner.path)) {
-      this.report('folder', await winExplorerFolder(win.id, title), appName)
+      this.report('folder', await winExplorerFolder(win.id, title), appName, window)
     }
   }
 
-  private report(kind: 'folder' | 'file', path: string | undefined, appName?: string): void {
+  private report(kind: 'folder' | 'file', path: string | undefined, appName?: string, window?: VideoRect): void {
     if (!path) return
     if (kind === 'folder') {
       if (path === this.lastFolder) return
       this.lastFolder = path
-      this.emit({ type: 'folder_active', path, app: appName })
+      this.emit({ type: 'folder_active', path, app: appName, window })
     } else {
       if (path === this.lastFile) return
       this.lastFile = path
-      this.emit({ type: 'file_active', path, app: appName })
+      this.emit({ type: 'file_active', path, app: appName, window })
     }
   }
 

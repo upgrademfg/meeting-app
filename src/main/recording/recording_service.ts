@@ -172,7 +172,7 @@ export class RecordingService {
     if (!info.hasMic) warnings.push('마이크를 사용할 수 없습니다. 내 목소리가 녹음되지 않습니다.')
 
     const log = (e: Parameters<EventLog['log']>[0]): void => events.log(e)
-    active.context = new ContextTracker(log)
+    active.context = new ContextTracker(layout, log)
     active.context.start()
 
     const canHookInput = process.platform !== 'darwin' || systemPreferences.isTrustedAccessibilityClient(false)

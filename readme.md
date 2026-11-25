@@ -33,10 +33,12 @@ npm run dist:win   # Windows 패키징 (nsis) — Windows에서 실행
 | `mouse_down` | button, clicks, x, y |
 | `mouse_move` | x, y (최대 10Hz) |
 | `wheel` | direction, rotation, x, y |
-| `app_switch` / `window_title` | app, title, url(mac 브라우저) |
-| `folder_active` | path, app — 지금 활성화된 폴더가 바뀜 (폴더를 열거나 그 창으로 전환) |
-| `file_active` | path, app — 지금 활성화된 파일이 바뀜 (파일을 열거나 그 문서 창으로 전환) |
+| `app_switch` / `window_title` | app, title, url(mac 브라우저), window |
+| `folder_active` | path, app, window — 지금 활성화된 폴더가 바뀜 (폴더를 열거나 그 창으로 전환) |
+| `file_active` | path, app, window — 지금 활성화된 파일이 바뀜 (파일을 열거나 그 문서 창으로 전환) |
 | `warning` | message |
+
+`window`는 활성 창의 위치와 크기 `{x, y, width, height}`이며 마우스 좌표와 같은 영상 픽셀 기준입니다. Windows 최근 항목에서 온 `file_active`/`folder_active`에는 없습니다.
 
 ## 구조
 

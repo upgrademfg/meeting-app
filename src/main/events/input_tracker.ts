@@ -1,7 +1,7 @@
-import { screen } from 'electron'
 import { uIOhook, WheelDirection, type UiohookMouseEvent, type UiohookWheelEvent } from 'uiohook-napi'
 import type { CaptureLayout } from '../../shared/types'
 import type { RecEvent } from './event_log'
+import { pointToVideo } from './video_coords'
 
 const MOVE_INTERVAL_MS = 100
 const WHEEL_INTERVAL_MS = 200
@@ -36,24 +36,16 @@ export class InputTracker {
     uIOhook.stop()
   }
 
-  private toVideo(x: number, y: number): { x: number; y: number } {
-    const p = process.platform === 'win32' ? screen.screenToDipPoint({ x, y }) : { x, y }
-    return {
-      x: Math.round((p.x - this.layout.originX) * this.layout.scale),
-      y: Math.round((p.y - this.layout.originY) * this.layout.scale)
-    }
-  }
-
   private handleDown = (e: UiohookMouseEvent): void => {
     const button = BUTTONS[e.button as keyof typeof BUTTONS] ?? 'other'
-    this.emit({ type: 'mouse_down', button, clicks: e.clicks, ...this.toVideo(e.x, e.y) })
+    this.emit({ type: 'mouse_down', button, clicks: e.clicks, ...pointToVideo(this.layout, e.x, e.y) })
     this.onMouseDown()
   }
 
   private handleMove = (e: UiohookMouseEvent): void => {
     const now = Date.now()
     if (now - this.lastMoveAt < MOVE_INTERVAL_MS) return
-    const p = this.toVideo(e.x, e.y)
+    const p = pointToVideo(this.layout, e.x, e.y)
     if (Math.abs(p.x - this.lastMove.x) + Math.abs(p.y - this.lastMove.y) < 3) return
     this.lastMoveAt = now
     this.lastMove = p
@@ -68,7 +60,7 @@ export class InputTracker {
       type: 'wheel',
       direction: e.direction === WheelDirection.HORIZONTAL ? 'horizontal' : 'vertical',
       rotation: e.rotation,
-      ...this.toVideo(e.x, e.y)
+      ...pointToVideo(this.layout, e.x, e.y)
     })
   }
 }

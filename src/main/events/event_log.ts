@@ -1,14 +1,15 @@
 import { createWriteStream, type WriteStream } from 'node:fs'
 import { performance } from 'node:perf_hooks'
+import type { VideoRect } from './video_coords'
 
 export type RecEvent =
   | { type: 'mouse_down'; button: 'left' | 'right' | 'middle' | 'other'; clicks: number; x: number; y: number }
   | { type: 'mouse_move'; x: number; y: number }
   | { type: 'wheel'; direction: 'vertical' | 'horizontal'; rotation: number; x: number; y: number }
-  | { type: 'app_switch'; app: string; title: string; url?: string }
-  | { type: 'window_title'; app: string; title: string; url?: string }
-  | { type: 'folder_active'; path: string; app?: string }
-  | { type: 'file_active'; path: string; app?: string }
+  | { type: 'app_switch'; app: string; title: string; url?: string; window: VideoRect }
+  | { type: 'window_title'; app: string; title: string; url?: string; window: VideoRect }
+  | { type: 'folder_active'; path: string; app?: string; window?: VideoRect }
+  | { type: 'file_active'; path: string; app?: string; window?: VideoRect }
   | { type: 'warning'; message: string }
 
 export class EventLog {
