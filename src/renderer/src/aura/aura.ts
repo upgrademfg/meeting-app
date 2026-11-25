@@ -1,10 +1,11 @@
 import './aura.css'
 
-const aura = document.querySelector<HTMLDivElement>('.aura')!
+const pulse = document.querySelector<SVGGElement>('.pulse')!
+
+pulse.addEventListener('animationend', () => pulse.classList.remove('clicked'))
 
 window.api.onCursorClick(() => {
-  const ripple = document.createElement('div')
-  ripple.className = 'ripple'
-  ripple.addEventListener('animationend', () => ripple.remove())
-  aura.appendChild(ripple)
+  pulse.classList.remove('clicked')
+  void pulse.getBoundingClientRect()
+  pulse.classList.add('clicked')
 })

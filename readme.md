@@ -64,7 +64,7 @@ src/main/
   recording/layout.ts            모든 모니터를 한 캔버스로 배치
   recording/ffmpeg.ts            WebM → MP4
   input/mouse_hub.ts             전역 마우스 hook(uiohook) 공용 구독 — 이벤트 기록과 커서 효과가 함께 사용
-  cursor_aura/cursor_aura.ts     녹화 중 커서를 따라다니는 AI 스타일 오버레이 (클릭 통과, 캡처 제외)
+  cursor_aura/cursor_aura.ts     녹화 중 커서 화살표를 감싸는 AI 스타일 빛 테두리 (클릭 통과, 캡처 제외)
   activity/                      활동 이벤트 기록
     index.ts                     조립 (플랫폼별 어댑터 선택, startActivityTracking)
     domain/                      이벤트·창 정보 타입과 순수 규칙
@@ -74,7 +74,7 @@ src/main/
 src/renderer/
   src/recorder/recorder.ts     숨김 창 녹화 엔진 (캡처, 합성, 오디오 믹스, MediaRecorder)
   src/app.tsx                  컨트롤 창 UI
-  aura.html, src/aura/          커서 오버레이 화면 (회전 그라데이션 링, 빛, 클릭 파동)
+  aura.html, src/aura/          커서 오버레이 화면 (화살표 모양 회전 그라데이션 테두리, 빛, 클릭 반짝임)
 ```
 
 ## 스파이크 체크리스트
